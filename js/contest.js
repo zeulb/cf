@@ -1,4 +1,4 @@
-var limiter = 200;
+var limiter = 300;
 var participant = [];
 var temporary = [];
 var request = [];
@@ -34,13 +34,17 @@ function getUrlParameter(sParam)
 var requestedId = getUrlParameter("id");
 
 function show()
-{ 
+{
 	console.log("firsttime"+firstTime);
 	$.each(participant, function(index,value) {
 		var tableRow = "";
 		tableRow += "<td class=\"text-center\">"+value.rank+"</td>";
 		tableRow += "<td class=\"text-center\">"+value.expectedRank+"</td>";
+		if (value.participantType==="CONTESTANT")
 		tableRow += "<td class=\""+mapping[value.userInfo.rank]+"\">"+value.userInfo.handle+"</td>";
+		else
+		tableRow += "<td class=\""+mapping[value.userInfo.rank]+"\">* "+value.userInfo.handle+"</td>";
+		
 		tableRow += "<td class=\""+mapping[value.userInfo.rank]+" text-center\">"+value.userInfo.rating+"</td>";
 		tableRow += "<td>"+value.userInfo.country+"</td>";
 		tableRow += "<td class=\"text-center\">"+value.points+"</td>";
@@ -64,7 +68,7 @@ function show()
 		$.each(problem, function(index,value) {
 			tableRow += "<td class=\"text-center\">"+value.points+"</td>";
 		});
-		if (firstTime) $("tbody").append("<tr id=\"user"+index+"\">"+tableRow+"</tr>");
+		if (firstTime === true) $("tbody").append("<tr id=\"user"+index+"\">"+tableRow+"</tr>");
 		else
 		{
 			//console.log("#user"+index);
@@ -169,27 +173,27 @@ function extractRow(user)
 {
 	var handles = [];
 	$.each(user, function(index,value) {
-		if (value.party.participantType !== "PRACTICE")
+		if (value.party.participantType !== "PRACTICE" && value.party.participantType !== "VIRTUAL")
 		{
 			var member = value.party.members;
-			$.each(member, function(index2,value2) {
-				participant.push(new Object());
-				temporary.push(new Object());
-				if (value.party.participantType !== "CONTESTANT") value2.handle = "*"+value2.handle;
-				handles.push(value2.handle);
-			});
+			participant.push(new Object());
+			temporary.push(new Object());
+			handles.push(member[0].handle);
 		}
 	});
 	processUser(handles);
+	var realIndex = 0;
 	$.each(user, function(index,value) {
-		if (value.party.participantType !== "PRACTICE")
+		if (value.party.participantType !== "PRACTICE" && value.party.participantType !== "VIRTUAL")
 		{
-			participant[index].rank = value.rank;
-			participant[index].points = value.points;
-			participant[index].penalty = value.penalty;
-			participant[index].successfulHackCount = value.successfulHackCount;
-			participant[index].unsuccessfulHackCount = value.unsuccessfulHackCount;
-			participant[index].problemResults = value.problemResults;
+			participant[realIndex].participantType = value.party.participantType;
+			participant[realIndex].rank = value.rank;
+			participant[realIndex].points = value.points;
+			participant[realIndex].penalty = value.penalty;
+			participant[realIndex].successfulHackCount = value.successfulHackCount;
+			participant[realIndex].unsuccessfulHackCount = value.unsuccessfulHackCount;
+			participant[realIndex].problemResults = value.problemResults;
+			realIndex++;
 		}
 	});
 
@@ -214,7 +218,7 @@ function getStandings(){
 			
 			console.log("requesting standings data "+firstTime);
 			//console.log(data);
-			if (firstTime)
+			if (firstTime===true)
 			{
 				$("title").append(data.result.contest.name);
 				$(".panel-heading").append("<h4 class=\"text-center\">"+data.result.contest.name+"</h4>");
@@ -232,6 +236,7 @@ function getStandings(){
 			getStandings();
 		}
 	});
+
 
 }
 
