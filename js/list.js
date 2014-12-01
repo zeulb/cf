@@ -25,7 +25,6 @@ var substringMatcher = function(strs) {
 	};
 }
 
-
 $(document).ready(function(){
 	$(document).on("ready",function(){
 		$(document).off();
