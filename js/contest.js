@@ -1,122 +1,109 @@
-var limiter = 300;
-var participant = [];
-var temporary = [];
-var request = [];
-var mapping = {
-				"international grandmaster" : "rated-user user-red",
-				"grandmaster"               : "rated-user user-fire",
-				"international master"      : "rated-user user-orange",
-				"master"					: "rated-user user-orange",
-				"candidate master"			: "rated-user user-violet",
-				"expert"					: "rated-user user-blue",
-				"specialist"				: "rated-user user-green",
-				"pupil"						: "rated-user user-green",
-				"newbie"					: "rated-user user-gray",
-				"unrated"					: ""
-};
-var firstTime = true;
-
-
-function getUrlParameter(sParam)
-{
-    var sPageURL = window.location.search.substring(1);
-    var sURLVariables = sPageURL.split('&');
-    for (var i = 0; i < sURLVariables.length; i++) 
-    {
-        var sParameterName = sURLVariables[i].split('=');
-        if (sParameterName[0] == sParam) 
-        {
-            return sParameterName[1];
-        }
-    }
-}   
-
 var requestedId = getUrlParameter("id");
 
-function show()
+function showTableBody()
 {
-	console.log("firsttime"+firstTime);
-	$.each(participant, function(index,value) {
+	console.log("newContestId:"+newContestId);
+	if (newContestId) $("tbody").empty();
+
+	$.each(contestantList, function(index,value) {
 		var tableRow = "";
-		tableRow += "<td class=\"text-center\">"+value.rank+"</td>";
-		tableRow += "<td class=\"text-center\">"+value.expectedRank+"</td>";
-		if (value.participantType==="CONTESTANT")
-		tableRow += "<td class=\""+mapping[value.userInfo.rank]+"\">"+value.userInfo.handle+"</td>";
+		// Add rank
+		tableRow += "<td class='text-center'>"+value.rank+"</td>";
+
+		// Add expected rank
+		tableRow += "<td class='text-center'>"+value.expectedRank+"</td>";
+
+		// Add handle
+		if (isOfficial.contains(value.participantType))
+			tableRow += "<td class='"+colorUserMapping[value.userInfo.rank]+"'>"+value.userInfo.handle+"</td>";
 		else
-		tableRow += "<td class=\""+mapping[value.userInfo.rank]+"\">* "+value.userInfo.handle+"</td>";
-		
-		tableRow += "<td class=\""+mapping[value.userInfo.rank]+" text-center\">"+value.userInfo.rating+"</td>";
+			tableRow += "<td class='"+colorUserMapping[value.userInfo.rank]+"'>* "+value.userInfo.handle+"</td>";
+
+		// Add rating
+		tableRow += "<td class='"+colorUserMapping[value.userInfo.rank]+" text-center'>"+value.userInfo.rating+"</td>";
+
+		// Add country
 		tableRow += "<td>"+value.userInfo.country+"</td>";
-		tableRow += "<td class=\"text-center\">"+value.points+"</td>";
+
+		// Add contest points
+		tableRow += "<td class='text-center'>"+value.points+"</td>";
+
+		// Add hack stat
 		if (value.successfulHackCount > 0 && value.unsuccessfulHackCount > 0)
-		{
-			tableRow += "<td class=\"text-center\"> +"+value.successfulHackCount+" / -"+value.unsuccessfulHackCount+"</td>";
-		}
+			tableRow += "<td class='text-center'> +"+value.successfulHackCount+" / -"+value.unsuccessfulHackCount+"</td>";
 		else if (value.successfulHackCount > 0)
-		{
-			tableRow += "<td class=\"text-center\"> +"+value.successfulHackCount+"</td>";
-		}
+			tableRow += "<td class='text-center'> +"+value.successfulHackCount+"</td>";
 		else if (value.unsuccessfulHackCount > 0)
-		{
-			tableRow += "<td class=\"text-center\"> -"+value.unsuccessfulHackCount+"</td>";
-		}
+			tableRow += "<td class='text-center'> -"+value.unsuccessfulHackCount+"</td>";
 		else
-		{
-			tableRow += "<td class=\"text-center\"> </td>";
-		}
+			tableRow += "<td class='text-center'> </td>";
+
+		// Add problem points
 		var problem = value.problemResults;
 		$.each(problem, function(index,value) {
-			tableRow += "<td class=\"text-center\">"+value.points+"</td>";
+			tableRow += "<td class='text-center'>"+value.points+"</td>";
 		});
-		if (firstTime === true) $("tbody").append("<tr id=\"user"+index+"\">"+tableRow+"</tr>");
+
+		// update behaviour
+		if (newContestId)
+			$("tbody").append("<tr id='user"+index+"'>"+tableRow+"</tr>");
 		else
-		{
-			//console.log("#user"+index);
-			//console.log(tableRow);
-			//console.log($("#user"+index));
 			$("#user"+index).html(tableRow);
-		}
 	});
-	firstTime = false;
+
+	// Refresh every 60 seconds
+	newContestId = false;
 	setTimeout("getStandings()",60000);
 }
 
-function finalize()
+var sortByRating = function (element1,element2) {
+	if (element1.rating !== element2.rating)
+	{
+		if (element1.rating > element2.rating) return -1;
+		else return 1;
+	}
+	else
+	{
+		if (element1.index > element2.index) return 1;
+		else return -1;
+	}
+}
+
+function getExpectedRank()
 {
-	$.each(participant, function(index,value) {
-		if (value.userInfo.country === undefined) value.userInfo.country = "-";
-		if (value.userInfo.rating === undefined) value.userInfo.rating = 1500;
-		value.hackBalance = value.successfulHackCount-value.unsuccessfulHackCount;
-		temporary[index].index=index;
-		temporary[index].rating=value.userInfo.rating;
+	$.each(contestantList, function(index,value) {
+		cloneTemp[index].index=index;
+		cloneTemp[index].rating=value.userInfo.rating;
 	});
-	temporary.sort(function(element1,element2){
-		if (element1.rating !== element2.rating)
-		{
-			if (element1.rating > element2.rating) return -1;
-			else return 1;
-		}
-		else
-		{
-			if (element1.index > element2.index) return 1;
-			else return -1;
-		}
-	});
+	cloneTemp.sort(sortByRating);
+
 	var lastRating = -1;
 	var lastRank = -1;
-	$.each(temporary, function(index,value) {
+	$.each(cloneTemp, function(index,value) {
 		if (value.rating === lastRating)
-		{
-			participant[value.index].expectedRank = lastRank;
-		}
-		else
-		{
-			participant[value.index].expectedRank = index+1;
+			contestantList[value.index].expectedRank = lastRank;
+		else {
+			contestantList[value.index].expectedRank = index+1;
 			lastRank = index+1;
 		}
 		lastRating = value.rating;
 	});
-	show();
+}
+
+function getAdditionalData()
+{
+	$.each(contestantList, function(index,value) {
+		if (value.userInfo.country === undefined) value.userInfo.country = "-";
+		if (value.userInfo.rating  === undefined) value.userInfo.rating  = 1500;
+		value.hackBalance = value.successfulHackCount-value.unsuccessfulHackCount;
+	});
+	getExpectedRank();
+}
+
+function finalize()
+{
+	getAdditionalData();
+	showTableBody();
 }
 
 function getUser(size,handle)
@@ -126,14 +113,14 @@ function getUser(size,handle)
 		dataType: 'JSONP',
 		data : {
 			jsonp:"callback",
-			handles:request.join(";")
+			handles:requestedUser.join(";")
 		},
 		jsonpCallback: 'callback',
 		type: 'GET',
 		success: function (data) {
 			member = data.result;
 			$.each(member, function(index,value) {
-				participant[size-1].userInfo = value;
+				contestantList[size-1].userInfo = value;
 				size--;
 			});
 			if (size === 0)
@@ -143,10 +130,10 @@ function getUser(size,handle)
 			}
 			else
 			{
-				request = [];
-				while(request.length < limiter)
+				requestedUser = [];
+				while(requestedUser.length < maxUserEachRetrieval)
 				{
-					request.push(handle.pop());
+					requestedUser.push(handle.pop());
 					if (handle.length === 0) break;
 				}
 				getUser(size,handle);
@@ -154,55 +141,75 @@ function getUser(size,handle)
 		},
 		error: function ()
 		{
-			console.log("failed to get user rating");
-			getUser(size,handle);
+			console.log("failed to retrieve user data try again in 5 seconds");
+			setTimeout("getUser(size,handle)",5000);
 		}
 	});
 }
 
-function processUser(handles)
+function processUser(unretrievedUser)
 {
-	while(request.length < limiter) {
-		request.push(handles.pop());
-		if (handles.length === 0) break;
+	while(requestedUser.length < maxUserEachRetrieval) {
+		requestedUser.push(unretrievedUser.pop());
+		if (unretrievedUser.length === 0) break;
 	}
-	getUser(handles.length+request.length,handles);
+	getUser(unretrievedUser.length+requestedUser.length,unretrievedUser);
 }
 
 function extractRow(user)
 {
-	var handles = [];
+	var unretrievedUser = [];
 	$.each(user, function(index,value) {
-		if (value.party.participantType !== "PRACTICE" && value.party.participantType !== "VIRTUAL")
+		if (!ignoredparticipantType.contains(value.party.participantType))
 		{
 			var member = value.party.members;
-			participant.push(new Object());
-			temporary.push(new Object());
-			handles.push(member[0].handle);
+			contestantList.push({});
+			cloneTemp.push({});
+			// Cannot handle team member for now
+			unretrievedUser.push(member[0].handle);
 		}
 	});
-	processUser(handles);
+	processUser(unretrievedUser);
+	// Extract data to contestantList
 	var realIndex = 0;
 	$.each(user, function(index,value) {
-		if (value.party.participantType !== "PRACTICE" && value.party.participantType !== "VIRTUAL")
+		if (!ignoredparticipantType.contains(value.party.participantType))
 		{
-			participant[realIndex].participantType = value.party.participantType;
-			participant[realIndex].rank = value.rank;
-			participant[realIndex].points = value.points;
-			participant[realIndex].penalty = value.penalty;
-			participant[realIndex].successfulHackCount = value.successfulHackCount;
-			participant[realIndex].unsuccessfulHackCount = value.unsuccessfulHackCount;
-			participant[realIndex].problemResults = value.problemResults;
+			var participant = contestantList[realIndex];
+			participant.participantType = value.party.participantType;
+			participant.rank = value.rank;
+			participant.points = value.points;
+			participant.penalty = value.penalty;
+			participant.successfulHackCount = value.successfulHackCount;
+			participant.unsuccessfulHackCount = value.unsuccessfulHackCount;
+			participant.problemResults = value.problemResults;
 			realIndex++;
 		}
 	});
 
 }
 
+function showTableHead(result) {
+	$("title").append(result.contest.name);
+
+	$(".panel-heading").append("<h4 class='text-center'>"+result.contest.name+"</h4>");
+	
+	$("thead").append('<tr><td class="text-center">Rank</td><td class="text-center">Exp. Rank</td><td>Handle</td><td class="text-center">Rating</td><td>Country</td><td class="text-center">Points</td><td class="text-center">Hack</td></tr>');
+	
+	var problemData = result.problems;
+	$.each(problemData, function(index,value) {
+		$("thead > tr").append("<td class='text-center'>"+ String.fromCharCode(65+index)+"</td>");
+	});
+}
+
+function reset() {
+	contestantList = [];
+	cloneTemp = [];
+	requestedUser = [];
+}
+
 function getStandings(){
-	participant = [];
-	temporary = [];
-	request = [];
+	reset();
 	$.ajax({
 		url: 'http://codeforces.com/api/contest.standings',
 		dataType: 'JSONP',
@@ -215,33 +222,19 @@ function getStandings(){
 		jsonpCallback: 'callback',
 		type: 'GET',
 		success: function (data) {
-			
-			console.log("requesting standings data "+firstTime);
-			//console.log(data);
-			if (firstTime===true)
-			{
-				$("title").append(data.result.contest.name);
-				$(".panel-heading").append("<h4 class=\"text-center\">"+data.result.contest.name+"</h4>");
-				var problem = data.result.problems;
-				$.each(problem, function(index,value) {
-					$("thead > tr").append("<td class=\"text-center\">"+ String.fromCharCode(65+index)+"</td>");
-				});
-			}
+			console.log("standings data successfully retrieved | newContestId:"+newContestId);
+			if (newContestId===true) showTableHead(data.result);
 			extractRow(data.result.rows);
-			
-			
 		},
 		error: function(){
-			console.log("failed to request");
-			getStandings();
+			console.log("failed to retrieve standings data, try again in 5 seconds");
+			setTimeout("getStandings()",5000);
 		}
 	});
-
-
 }
 
 
 $(document).ready(function() {
+	newContestId = true;
 	getStandings();
-
 });
