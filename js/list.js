@@ -1,10 +1,22 @@
+function getCleanURL(contestId)
+{
+	var url = "index.html?id="+contestId;
+	if (getUrlParameter("sortByRating") === "true") url += "&sortByRating=true";
+	else if (getUrlParameter("sortByHandle") === "true") url += "&sortByHandle=true";
+	else if (getUrlParameter("sortByCountry") === "true") url += "&sortByCountry=true";
+	else if (getUrlParameter("sortByHack") === "true") url += "&sortByHack=true";
+	return url;
+}
+
 function display(contestId)
 {
-	window.history.pushState({},"","index.html?id="+contestId);
+	console.log("displayed "+contestId);
+	var url = getCleanURL(contestId);
+	if (getUrlParameter("showUnofficial") === "true") url += "&showUnofficial=true";
+	window.history.pushState({},"",url);
 	newContestId = true;
 	requestedId = contestId;
 	getStandings();
-	
 }
 
 var substringMatcher = function(strs) {
@@ -22,6 +34,7 @@ var substringMatcher = function(strs) {
 }
 
 function getContestList() {
+	$("#loading-message").html("Retrieving Contest List");
 	$.ajax({
 		url: 'http://codeforces.com/api/contest.list',
 		dataType: 'JSONP',
@@ -42,16 +55,25 @@ function getContestList() {
 					if (mostRecent === -1) mostRecent = value.id;
 				}
 			});
-			if (getUrlParameter("id") === undefined) display(mostRecent);
+			if (getUrlParameter("id") === "undefined") display(mostRecent);
 			else display(getUrlParameter("id"));
 		},
 		error: function (){
-			console.log("Unable to retrieve contest list");
+			$("#loading-message").html("Failed to retrieve contest list");
+			setTimeout("getContestList()",5000);
 		}
 	});
 }
 
 $(document).ready(function(){
+	if (getUrlParameter("showUnofficial") === "true")
+	{
+		$(".input-group-btn").html(unofficialokbtn);
+	}
+	else
+	{
+		$(".input-group-btn").html(unofficialnobtn);
+	}
 	getContestList();
 
 	$('.typeahead').typeahead(null, {
@@ -69,5 +91,28 @@ $(document).ready(function(){
 
 	$('#go').on('click.search', function(){
 		display(contestMap[selectedDatum["value"]]);
+	});
+
+	$(".input-group-btn").on("click","#unofficial-no",function(){
+		console.log("triggeredd222");
+		$(".input-group-btn").empty();
+		var url = getCleanURL(requestedId);
+		url += "&showUnofficial=true";
+		window.history.pushState({},"",url);
+		newContestId = true;
+		getStandings();
+		$(".input-group-btn").html(unofficialokbtn);
+		$('.btn').attr("disabled", true);
+	});
+
+	$(".input-group-btn").on("click","#unofficial-ok",function(){
+		console.log("triggeredd");
+		$(".input-group-btn").empty();
+		var url = getCleanURL(requestedId);
+		window.history.pushState({},"",url);
+		newContestId = true;
+		getStandings(requestedId);
+		$(".input-group-btn").html(unofficialnobtn);
+		$('.btn').attr("disabled", true);
 	});
 });

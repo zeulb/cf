@@ -22,7 +22,10 @@ var colorUserMapping = {
 	"unrated"					: ""
 };
 var autoRefresh = false;
+var statusRefresh;
 
+$("#loading").hide();
+$("#unofficial-ok").remove();
 
 Array.prototype.contains = function(k) {
   for(var i=0; i < this.length; i++){
@@ -32,6 +35,10 @@ Array.prototype.contains = function(k) {
   }
   return false;
 }
+
+var unofficialnobtn = '<a href="#" class="btn btn-success" role="button" id="unofficial-no">show unofficial&nbsp <span class="glyphicon glyphicon-remove"></span></a>';
+var unofficialokbtn = '<a href="#" class="btn btn-warning" role="button" id="unofficial-ok">show unofficial&nbsp <span class="glyphicon glyphicon-ok"></span></a>';
+
 
 function getUrlParameter(sParam)
 {

@@ -5,6 +5,7 @@
 	<link rel="stylesheet" href="css/bootstrap.min.css">
 	<link rel="stylesheet" href="css/typeaheadjs.css">
 	<link rel="stylesheet" href="css/community.css">
+	<link rel="stylesheet" href="css/main.css">
 </head>
 
 <body>
@@ -13,15 +14,19 @@
 	<nav class="navbar navbar-inverse" role="navigation">
 		<div class="container-fluid">
 			<div class="navbar-header">
-				<a class="navbar-brand" href="#">Codeforces Standings</a>
+				<a class="navbar-brand" href="#">Codeforces Standings <span class="glyphicon glyphicon-flash"> &nbsp&nbsp&nbsp</span></a>
+				<a class="navbar-brand" href="#"><span id="loading"><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>&nbsp<span id="loading-message">Loading</span>...</span></a>
+
 			</div>
+
 			<div class="collapse navbar-collapse">
-				<form class="navbar-form navbar-left" role="search" >
+
+				<form class="navbar-form navbar-right" role="search" >
 					<div class="input-group">
+						
 						<input type="text" class="form-control typeahead" placeholder="contest name here" style="width: 440px;">
-						<span class="input-group-btn">
-							<button class="btn btn-warning" type="button" id="go">Go!</button>
-						</span>
+						<div class="input-group-btn">
+						</div>
 					</div>
 				</form>
 			</div>
@@ -45,11 +50,17 @@
 			</div>
 		</div>
 	</div>
+	<footer class="footer">
+		<div class="container">
+			<p class="text-muted text-center"> Created by <a href="http://codeforces.com/profile/zeulb">zeulb</a> | <a href="https://github.com/zeulb/">github<a> </p>
+		</div>
+	</footer>
 
 	<script src="js/jquery-2.1.1.js"></script>
 	<script src="js/bootstrap.min.js"></script>
 	<script src="js/typeahead.bundle.js"></script>
 	<script src="js/global.js"></script>
+	<script src="js/sort.js"></script>
 	<script src="js/list.js"></script>
 	<script src="js/contest.js"></script>
 </body>
