@@ -13,7 +13,10 @@ function showTableBody()
 		tableRow += "<td class='text-center'>"+value.expectedRank+"</td>";
 
 		// Add country
-		tableRow += "<td>"+value.userInfo.country+"</td>";
+		if (value.userInfo.country === "~")
+			tableRow += "<td> </td>";
+		else
+			tableRow += "<td>"+value.userInfo.country+"</td>";
 
 		// Add handle
 		if (isOfficial.contains(value.participantType))
@@ -42,8 +45,28 @@ function showTableBody()
 		// Add problem points
 		var problem = value.problemResults;
 		$.each(problem, function(index,value) {
-			if (value.points > 0) tableRow += "<td class='text-center' style = 'color:#0a0;font-weight: bold;'>"+value.points+"</td>";
-			else tableRow += "<td class='text-center'>"+value.points+"</td>";
+			if (value.points > 0)
+			{
+				var minutes = Math.round(value.bestSubmissionTimeSeconds/60);
+				var hours = Math.round(minutes/60);
+				minutes %= 60;
+				minutes = padding(minutes,2);
+				hours = padding(hours,2);
+
+				//console.log(index+" "+fastestSolve[index]);
+				if (value.bestSubmissionTimeSeconds===fastestSolve[index])
+					tableRow += "<td class='text-center' style = 'color:#0a0;font-weight: bold;background-color:#CCFFFF'>"+value.points+"<br><small class='text-muted' style='font-weight: normal;'>"+hours+":"+minutes+"</small></td>";
+			
+				else
+					tableRow += "<td class='text-center' style = 'color:#0a0;font-weight: bold;'>"+value.points+"<br><small class='text-muted' style='font-weight: normal;'>"+hours+":"+minutes+"</small></td>";
+			}
+			else
+			{
+				if (value.rejectedAttemptCount > 0)
+				tableRow += "<td class='text-center' style = 'color:red;font-weight: bold'>-"+value.rejectedAttemptCount+"</td>";
+				else
+					tableRow += "<td class='text-center'><br><br></td>";
+			}
 			
 		});
 
@@ -99,19 +122,19 @@ function doSort()
 	{
 		contestantList.sort(sortByRating);
 	}
-	if (getUrlParameter("sortByHandle") === "true")
+	else if (getUrlParameter("sortByHandle") === "true")
 	{
 		contestantList.sort(sortByHandle);
 	}
-	if (getUrlParameter("sortByCountry") === "true")
+	else if (getUrlParameter("sortByCountry") === "true")
 	{
 		contestantList.sort(sortByCountry);
 	}
-	if (getUrlParameter("sortByHack") === "true")
+	else if (getUrlParameter("sortByHack") === "true")
 	{
 		contestantList.sort(sortByHack);
 	}
-	if (getUrlParameter("sortByRank") === "true")
+	else
 	{
 		contestantList.sort(sortByRank);
 	}
@@ -205,6 +228,13 @@ function extractRow(user)
 			participant.successfulHackCount = value.successfulHackCount;
 			participant.unsuccessfulHackCount = value.unsuccessfulHackCount;
 			participant.problemResults = value.problemResults;
+			$.each(participant.problemResults,function(index,value)
+			{
+				if (value.points > 0)
+				{
+					fastestSolve[index] = Math.min(fastestSolve[index],value.bestSubmissionTimeSeconds);
+				}
+			});
 			realIndex++;
 		}
 	});
@@ -222,11 +252,13 @@ function showTableHead(result) {
 
 	$(".panel-heading").append("<h4 class='text-center'>"+result.contest.name+"</h4>");
 	
-	$("thead").append('<tr><td class="text-center" id="table-rank">Rank</td><td class="text-center" id="table-exp-rank">Exp. Rank</td><td id="table-country">Country</td><td id="table-handle">Handle</td><td class="text-center" id="table-rating">Rating</td><td class="text-center" id="table-point">Points</td><td class="text-center" id="table-hack">Hack</td></tr>');
+	$("thead").append('<tr><td class="text-center vertical-align" id="table-rank">Rank</td><td class="text-center vertical-align" id="table-exp-rank">Exp. Rank</td><td id="table-country" class="vertical-align">Country</td><td id="table-handle" class="vertical-align">Handle</td><td class="text-center vertical-align" id="table-rating">Rating</td><td class="text-center vertical-align" id="table-point">Points</td><td class="text-center vertical-align" id="table-hack">Hack</td></tr>');
 	
+	fastestSolve = [];
 	var problemData = result.problems;
 	$.each(problemData, function(index,value) {
-		$("thead > tr").append("<td class='text-center'>"+ String.fromCharCode(65+index)+"</td>");
+		$("thead > tr").append("<td class='text-center vertical-align'>"+ value.index+"<br><strong><small>"+value.points+"</small></strong></td>");
+		fastestSolve.push(1000000000);
 	});
 }
 

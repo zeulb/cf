@@ -23,9 +23,9 @@ var colorUserMapping = {
 };
 var autoRefresh = false;
 var statusRefresh;
+var fastestSolve;
 
 $("#loading").hide();
-$("#unofficial-ok").remove();
 
 Array.prototype.contains = function(k) {
   for(var i=0; i < this.length; i++){
@@ -34,6 +34,12 @@ Array.prototype.contains = function(k) {
     }
   }
   return false;
+}
+
+function padding(num, size) {
+    var s = num+"";
+    while (s.length < size) s = "0" + s;
+    return s;
 }
 
 var unofficialnobtn = '<a href="#" class="btn btn-success" role="button" id="unofficial-no">show unofficial&nbsp <span class="glyphicon glyphicon-remove"></span></a>';

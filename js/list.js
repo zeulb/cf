@@ -10,6 +10,11 @@ function getCleanURL(contestId)
 
 function display(contestId)
 {
+	if (contestId === undefined)
+	{
+		console.log("invalid");
+		return;
+	}
 	console.log("displayed "+contestId);
 	var url = getCleanURL(contestId);
 	if (getUrlParameter("showUnofficial") === "true") url += "&showUnofficial=true";
