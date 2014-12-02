@@ -55,7 +55,7 @@ function getContestList() {
 					if (mostRecent === -1) mostRecent = value.id;
 				}
 			});
-			if (getUrlParameter("id") === "undefined") display(mostRecent);
+			if (getUrlParameter("id") === "undefined" || getUrlParameter("id") === undefined) display(mostRecent);
 			else display(getUrlParameter("id"));
 		},
 		error: function (){
