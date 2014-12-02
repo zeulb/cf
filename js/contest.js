@@ -1,9 +1,8 @@
-var requestedId = getUrlParameter("id");
+var requestedId;
 
 function showTableBody()
 {
 	console.log("newContestId:"+newContestId);
-	if (newContestId) $("tbody").empty();
 
 	$.each(contestantList, function(index,value) {
 		var tableRow = "";
@@ -53,7 +52,8 @@ function showTableBody()
 
 	// Refresh every 60 seconds
 	newContestId = false;
-	setTimeout("getStandings()",60000);
+	if (autoRefresh) setTimeout("getStandings()",60000);
+	$("input").prop('disabled', false);
 }
 
 var sortByRating = function (element1,element2) {
@@ -177,7 +177,7 @@ function extractRow(user)
 		{
 			var participant = contestantList[realIndex];
 			participant.participantType = value.party.participantType;
-			participant.rank = value.rank;
+			participant.rank = realIndex+1;
 			participant.points = value.points;
 			participant.penalty = value.penalty;
 			participant.successfulHackCount = value.successfulHackCount;
@@ -190,6 +190,12 @@ function extractRow(user)
 }
 
 function showTableHead(result) {
+	$("title").empty();
+	$(".panel-heading").empty();
+	$("thead > tr").empty();
+	$("thead").empty();
+	$("tbody").empty();
+
 	$("title").append(result.contest.name);
 
 	$(".panel-heading").append("<h4 class='text-center'>"+result.contest.name+"</h4>");
@@ -209,6 +215,8 @@ function reset() {
 }
 
 function getStandings(){
+	$("input").prop('disabled', true);
+	console.log("getStandings : "+requestedId);
 	reset();
 	$.ajax({
 		url: 'http://codeforces.com/api/contest.standings',
@@ -224,6 +232,7 @@ function getStandings(){
 		success: function (data) {
 			console.log("standings data successfully retrieved | newContestId:"+newContestId);
 			if (newContestId===true) showTableHead(data.result);
+			autoRefresh=(data.result.contest.phase === "CODING");
 			extractRow(data.result.rows);
 		},
 		error: function(){
@@ -235,6 +244,5 @@ function getStandings(){
 
 
 $(document).ready(function() {
-	newContestId = true;
-	getStandings();
+
 });

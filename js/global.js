@@ -21,6 +21,7 @@ var colorUserMapping = {
 	"newbie"					: "rated-user user-gray",
 	"unrated"					: ""
 };
+var autoRefresh = false;
 
 
 Array.prototype.contains = function(k) {

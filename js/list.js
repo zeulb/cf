@@ -1,7 +1,10 @@
 function display(contestId)
 {
 	window.history.pushState({},"","index.html?id="+contestId);
-	$("#standings-box").load("contest.html?id="+contestId);
+	newContestId = true;
+	requestedId = contestId;
+	getStandings();
+	
 }
 
 var substringMatcher = function(strs) {
@@ -39,7 +42,8 @@ function getContestList() {
 					if (mostRecent === -1) mostRecent = value.id;
 				}
 			});
-			display(mostRecent);
+			if (getUrlParameter("id") === undefined) display(mostRecent);
+			else display(getUrlParameter("id"));
 		},
 		error: function (){
 			console.log("Unable to retrieve contest list");
