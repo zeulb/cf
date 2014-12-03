@@ -35,7 +35,7 @@ function showTableBody()
 
 		// Add handle
 		if (isOfficial.contains(value.participantType))
-			tableRow += "<td class='"+colorUserMapping[value.userInfo.rank]+"'>"+value.userInfo.handle+"</td>";
+			tableRow += "<td class='"+colorUserMapping[value.userInfo.rank]+"'><a href='http://codeforces.com/profile/"+value.userInfo.handle+"' class='"+colorUserMapping[value.userInfo.rank]+"'>"+value.userInfo.handle+"</a></td>";
 		else
 			tableRow += "<td class='"+colorUserMapping[value.userInfo.rank]+"'>* "+value.userInfo.handle+"</td>";
 
@@ -71,9 +71,9 @@ function showTableBody()
 				minutes = padding(minutes,2);
 				hours = padding(hours,2);
 
-				//console.log(index+" "+fastestSolve[index]);
+				console.log(index+" "+fastestSolve[index]);
 				if (value.bestSubmissionTimeSeconds===fastestSolve[index])
-					tableRow += "<td class='text-center' style = 'color:#0a0;font-weight: bold;backgfloor-color:#CCFFFF'>"+value.points+"<br><small class='text-muted' style='font-weight: normal;'>"+hours+":"+minutes+"</small></td>";
+					tableRow += "<td class='text-center' style = 'color:#0a0;font-weight: bold;background-color:#CCFFFF'>"+value.points+"<br><small class='text-muted' style='font-weight: normal;'>"+hours+":"+minutes+"</small></td>";
 			
 				else
 					tableRow += "<td class='text-center' style = 'color:#0a0;font-weight: bold;'>"+value.points+"<br><small class='text-muted' style='font-weight: normal;'>"+hours+":"+minutes+"</small></td>";
