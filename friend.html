@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Codeforces Friend List Extractor</title>
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+</head>
+<body>
+	<div class="container">
+		<div class="panel panel-primary">
+		<div class="panel-heading">Go to <a href="http://codeforces.com/ratings/friends/true" style="color:white;text-decoration:none"> friend list </a> and copy the table content (from first rank to last rank in your friend list) and paste it below</div>
+	</div>
+		<textarea class="form-control" rows=10></textarea>
+		<br>
+		<button onclick="extract()" class="btn btn-danger">
+			Extract Friend!
+		</button>
+		<br><br>
+		<input type="text" class="form-control" placeholder="paste this to the end of standings url" readonly="true" style="cursor:default"></input>
+		<script src="js/jquery-2.1.1.js"></script>
+		<script>
+			function extract()
+			{
+				var data = $("textarea").val();
+				console.log(data);
+				var dataperline = data.split("\n");
+
+				var ans = "&friendList=";
+				for(var i=0;i<dataperline.length;i++)
+				{
+					var datainline = dataperline[i];
+					
+					var datasplit = datainline.split(/[\s\t]+/);
+					console.log(datasplit);
+					if (datasplit[datasplit.length-3] !== undefined)
+					{
+						if (ans === "&friendList=")
+						ans += datasplit[datasplit.length-3];
+						else
+						ans += ";"+datasplit[datasplit.length-3];
+					}
+				}
+				console.log(ans);
+				$("input").val(ans);
+			}
+		</script>
+	</div>
+</body>

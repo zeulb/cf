@@ -4,20 +4,20 @@ function showOnly(country)
 {
 	$.each(contestantList, function(index,value) {
 			if (country === "Global") $("#user"+index).show();
-			else if (value.userInfo.country !== country)
+			else if (value.userInfo.country === country || friend.contains(value.userInfo.handle))
 			{
-				$("#user"+index).hide();
+				$("#user"+index).show();
 			}
 			else
 			{
-				$("#user"+index).show();
+				$("#user"+index).hide();
 			}
 		});
 }
 
 function showTableBody()
 {
-	console.log("newContestId:"+newContestId);
+	//console.log("newContestId:"+newContestId);
 
 	$.each(contestantList, function(index,value) {
 		var tableRow = "";
@@ -71,7 +71,7 @@ function showTableBody()
 				minutes = padding(minutes,2);
 				hours = padding(hours,2);
 
-				console.log(index+" "+fastestSolve[index]);
+				//console.log(index+" "+fastestSolve[index]);
 				if (value.bestSubmissionTimeSeconds===fastestSolve[index])
 					tableRow += "<td class='text-center' style = 'color:#0a0;font-weight: bold;background-color:#CCFFFF'>"+value.points+"<br><small class='text-muted' style='font-weight: normal;'>"+hours+":"+minutes+"</small></td>";
 			
@@ -90,9 +90,15 @@ function showTableBody()
 
 		// update behaviour
 		if (newContestId || $("#user"+index).length === 0)
+		{
 			$("tbody").append("<tr id='user"+index+"'>"+tableRow+"</tr>");
+		}
 		else
+		{
 			$("#user"+index).html(tableRow);
+		}
+		if (friend.contains(value.userInfo.handle)) $("#user"+index).addClass("active");
+		else $("#user"+index).removeClass("active");
 	});
 	var country = getUrlParameter("country");
 	if (country !== undefined)
@@ -103,7 +109,11 @@ function showTableBody()
 	}
 	// Refresh every 60 seconds
 	newContestId = false;
-	if (autoRefresh) statusRefresh = setTimeout("getStandings()",20000);
+	if (autoRefresh)
+	{
+		if (statusRefresh !== undefined) clearInterval(statusRefresh);
+		statusRefresh = setTimeout("getStandings()",15000);
+	}
 	$("input").prop('disabled', false);
 	$('.btn').attr("disabled", false);
 	$("#loading").fadeOut(1000);
@@ -133,8 +143,12 @@ function getExpectedRank()
 function getAdditionalData()
 {
 	$.each(contestantList, function(index,value) {
+		//console.log(index);
+		//console.log(index+" "+value);
+		//console.log(value.userInfo.country);
 		if (value.userInfo.country === undefined) value.userInfo.country = "~";
 		if (value.userInfo.rating  === undefined) value.userInfo.rating  = 1500;
+		if (value.userInfo.rank  === undefined) value.userInfo.rank  = "unrated";
 		value.hackBalance = value.successfulHackCount-value.unsuccessfulHackCount;
 	});
 	getExpectedRank();
@@ -212,52 +226,14 @@ function getUser(unretrievedUser,unretrievedIndex,totalRequested)
 		error: function ()
 		{
 			$("#loading-message").html("Failed to retrieve user information");
-			setTimeout("getUser(size,handle)",5000);
+			setTimeout("getUser(unretrievedUser,unretrievedIndex,totalRequested)",5000);
 		}
 	});
 }
 
-function processUser(unretrievedUser,unretrievedIndex,totalRequested)
+function processUser(user,unretrievedUser,unretrievedIndex,totalRequested)
 {
-	while(requestedUser.length < maxUserEachRetrieval) {
-		requestedUser.push(unretrievedUser.pop());
-		requestedIndex.push(unretrievedIndex.pop());
-		if (unretrievedUser.length === 0) break;
-	}
-	getUser(unretrievedUser,unretrievedIndex,totalRequested);
-}
-
-function extractRow(user)
-{
-	var unretrievedUser = [];
-	var unretrievedIndex = [];
-	var realIndex = 0;
-	$.each(user, function(index,value) {
-		if (!ignoredparticipantType.contains(value.party.participantType))
-		{
-			var member = value.party.members;
-			contestantList.push({});
-			cloneTemp.push({});
-			// Cannot handle team member for now
-			if (caches.hasOwnProperty(member[0].handle))
-			{
-				console.log("HIT");
-				alert("ada");
-				contestantList[realIndex].userInfo = caches[member[0].handle];
-			}
-			else
-			{
-				unretrievedUser.push(member[0].handle);
-				unretrievedIndex.push(realIndex);
-			}
-			realIndex++;
-		}
-	});
-	if (unretrievedUser.length !== 0)
-	{
-		processUser(unretrievedUser,unretrievedIndex,unretrievedIndex.length);
-	}
-	// Extract data to contestantList
+	var realIndex;
 	realIndex = 0;
 	$.each(user, function(index,value) {
 		if (!ignoredparticipantType.contains(value.party.participantType))
@@ -283,24 +259,70 @@ function extractRow(user)
 	});
 	if (unretrievedUser.length === 0)
 	{
-		//console.log("Masuk");
 		getAdditionalData();
 		finalize();
 	}
+	else
+	{
+		while(requestedUser.length < maxUserEachRetrieval) {
+			requestedUser.push(unretrievedUser.pop());
+			requestedIndex.push(unretrievedIndex.pop());
+			if (unretrievedUser.length === 0) break;
+		}
+		getUser(unretrievedUser,unretrievedIndex,totalRequested);
+	}
+}
+
+function extractRow(user)
+{
+	var unretrievedUser = [];
+	var unretrievedIndex = [];
+	var realIndex = 0;
+	$.each(user, function(index,value) {
+		if (!ignoredparticipantType.contains(value.party.participantType))
+		{
+			var member = value.party.members;
+			contestantList.push({});
+			cloneTemp.push({});
+			// Cannot handle team member for now
+			if (caches.hasOwnProperty(member[0].handle))
+			{
+			//	console.log("HIT");
+				contestantList[realIndex].userInfo = caches[member[0].handle];
+			}
+			else
+			{
+				unretrievedUser.push(member[0].handle);
+				unretrievedIndex.push(realIndex);
+			}
+			realIndex++;
+		}
+	});
+	processUser(user,unretrievedUser,unretrievedIndex,unretrievedIndex.length);
+	// Extract data to contestantList
+	
+	
+
+}
+
+function eraseEverything()
+{
+	
+	
+	
+	$("tbody").empty();
 
 }
 
 function showTableHead(result) {
-	$("title").empty();
 	$(".panel-heading").empty();
+	$("title").empty();
 	$("thead > tr").empty();
-	$("tbody").empty();
-
 	$("title").append(result.contest.name);
 
 	$(".panel-heading").append("<h4 class='text-center'>"+result.contest.name+"</h4>");
 	
-	$("thead > tr").append('<td class="text-center vertical-align" id="table-rank">Rank</td><td class="text-center vertical-align" id="table-exp-rank">Seed</td><td id="table-country" class="vertical-align">Country</td><td id="table-handle" class="vertical-align">Handle</td><td class="text-center vertical-align" id="table-rating">Rating</td><td class="text-center vertical-align" id="table-point">Points</td><td class="text-center vertical-align" id="table-hack">Hack</td>');
+	$("thead > tr").append('<td class="text-center vertical-align" id="table-rank" style="cursor:pointer">Rank</td><td class="text-center vertical-align" id="table-exp-rank" style="cursor:pointer">Seed</td><td class="text-center" id="table-country" class="vertical-align" style="cursor:pointer">Country</td><td id="table-handle" class="text-center vertical-align" style="cursor:pointer">Handle</td><td class="text-center vertical-align" id="table-rating" style="cursor:pointer">Rating</td><td class="text-center vertical-align" id="table-point" style="cursor:pointer">Points</td><td class="text-center vertical-align" id="table-hack" style="cursor:pointer">Hack</td>');
 	
 	fastestSolve = [];
 	var problemData = result.problems;
@@ -335,10 +357,14 @@ function getStandings(){
 		jsonpCallback: 'callback',
 		type: 'GET',
 		success: function (data) {
+		//	console.log("sukses");
 			console.log("standings data successfully retrieved | newContestId:"+newContestId);
-			if (newContestId===true) showTableHead(data.result);
+			if (newContestId===true) eraseEverything();
+			showTableHead(data.result);
+
 			autoRefresh=(data.result.contest.phase === "CODING");
 			if (autoRefresh === 0 && statusRefresh !== undefined) clearInterval(statusRefresh);
+		//	console.log("sukses");
 			extractRow(data.result.rows);
 		},
 		error: function(){
@@ -351,7 +377,7 @@ function getStandings(){
 
 updateURL = function(parameter) {
 	$("#loading").fadeIn();
-	console.log("triggered "+ parameter);
+	//console.log("triggered "+ parameter);
 	var url = "index.html?id="+requestedId;
 	if (parameter === "sortByRank") {
 		if (getUrlParameter("sortByRank") !=="true") url += "&sortByRank=true";

@@ -6,6 +6,7 @@ function getCleanURL(contestId)
 	else if (getUrlParameter("sortByCountry") === "true") url += "&sortByCountry=true";
 	else if (getUrlParameter("sortByHack") === "true") url += "&sortByHack=true";
 	if (getUrlParameter("country") !== undefined) url += "&country="+getUrlParameter("country");
+	if (getUrlParameter("friendList") !== undefined) url += "&friendList="+getUrlParameter("friendList");
 	return url;
 }
 
@@ -16,6 +17,8 @@ function getCleanURL2(contestId)
 	else if (getUrlParameter("sortByHandle") === "true") url += "&sortByHandle=true";
 	else if (getUrlParameter("sortByCountry") === "true") url += "&sortByCountry=true";
 	else if (getUrlParameter("sortByHack") === "true") url += "&sortByHack=true";
+	if (getUrlParameter("showUnofficial") === "true") url += "&showUnofficial=true";
+	if (getUrlParameter("friendList") !== undefined) url += "&friendList="+getUrlParameter("friendList");
 	return url;
 }
 
@@ -83,13 +86,18 @@ function getContestList() {
 }
 
 $(document).ready(function(){
+	if (getUrlParameter("friendList") !== undefined)
+	{
+		friend = getUrlParameter("friendList").split(";");
+	}
+
 	if (getUrlParameter("showUnofficial") === "true")
 	{
-		$(".input-group-btn").html(unofficialokbtn);
+		$("#unofficial").html(unofficialokbtn);
 	}
 	else
 	{
-		$(".input-group-btn").html(unofficialnobtn);
+		$("#unofficial").html(unofficialnobtn);
 	}
 	getContestList();
 
@@ -123,26 +131,26 @@ $(document).ready(function(){
 	});
 
 
-	$(".input-group-btn").on("click","#unofficial-no",function(){
+	$("#unofficial").on("click","#unofficial-no",function(){
 		console.log("triggeredd222");
-		$(".input-group-btn").empty();
+		$("#unofficial").empty();
 		var url = getCleanURL(requestedId);
 		url += "&showUnofficial=true";
 		window.history.pushState({},"",url);
 		newContestId = true;
 		getStandings();
-		$(".input-group-btn").html(unofficialokbtn);
+		$("#unofficial").html(unofficialokbtn);
 		$('.btn').attr("disabled", true);
 	});
 
-	$(".input-group-btn").on("click","#unofficial-ok",function(){
+	$("#unofficial").on("click","#unofficial-ok",function(){
 		console.log("triggeredd");
-		$(".input-group-btn").empty();
+		$("#unofficial").empty();
 		var url = getCleanURL(requestedId);
 		window.history.pushState({},"",url);
 		newContestId = true;
 		getStandings(requestedId);
-		$(".input-group-btn").html(unofficialnobtn);
+		$("#unofficial").html(unofficialnobtn);
 		$('.btn').attr("disabled", true);
 	});
 });

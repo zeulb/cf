@@ -21,11 +21,13 @@ var colorUserMapping = {
 	"specialist"				: "rated-user user-green",
 	"pupil"						: "rated-user user-green",
 	"newbie"					: "rated-user user-gray",
-	"unrated"					: ""
+	"unrated"					: "user-black"
 };
-var countryList = ["Global",
+var countryList = ["Global","Friend",
 	"Russia","Belarus","China","Japan","United States (USA)","Poland","Ukraine","Taiwan","Korea, Republic of","Kazakhstan","Vietnam","Iran","Croatia","Romania","Korea,DPR","Slovakia","Indonesia","Hong Kong","Latvia","India","Bulgaria","Germany","Brazil","Canada","Georgia","Thailand","Switzerland","Sweden","Finland","Serbia","Egypt","Czech Republic","Bangladesh","Australia","Armenia","Turkiye","Uzbekistan","Peru","United Kingdom","Colombia","Lithuania","Spain","France","Italy","Argentina","Kyrgyzstan","Mexico","Hungary","Syria","Belgium","Cuba","Catalonia","Mongolia","Austria","South Africa","Turkmenistan","Philippines","Slovenia","Venezuela","Estonia","Norway","Singapore","Tajikistan","Bolivia","Malaysia","Moldova","The Netherlands","Macedonia","Azerbaijan","Greece","Portugal","Jordan","Lebanon","Antarctica","Dominican Republic","Morocco","Sri Lanka","Bosnia and Herzegovina","Ireland","Tunisia","Cyprus","Denmark","Israel","Mete","Montenegro","Chile","Iceland","New Zealand","Mauritius","Zimbabwe","Macau","Gensokyo","Hubei","Oman","Madagascar","PRC","Nada","Pakistan","Nepal","Ghana","Kyrgyzstans","Mozambique","Zambia","Two_friends_say_that_I_have_no_life. Yeah_it_true.I_am_useless.","Valencian Country","AngelBeats","Uruguay","Haiti","Burundi","Albania","Iraq","GDL","Benin","Palestine","Nigeria","Saudi Arabia","Honduras","Algeria"
 ]
+
+var friend = [];
 
 var autoRefresh = false;
 var statusRefresh;
@@ -40,6 +42,10 @@ Array.prototype.contains = function(k) {
     }
   }
   return false;
+}
+
+function replaceAll(find, replace, str) {
+  return str.replace(new RegExp(find, 'g'), replace);
 }
 
 function padding(num, size) {
@@ -61,7 +67,9 @@ function getUrlParameter(sParam)
 		var sParameterName = sURLVariables[i].split('=');
 		if (sParameterName[0] == sParam)
 		{
-			return sParameterName[1];
+			var temp = sParameterName[1]; 
+			temp = replaceAll("%20"," ",temp);
+			return temp;
 		}
 	}
 }

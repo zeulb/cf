@@ -15,7 +15,7 @@
 	<nav class="navbar navbar-inverse" role="navigation">
 		<div class="container-fluid">
 			<div class="navbar-header">
-				<a class="navbar-brand" href="index.html">Codeforces Standings <span class="glyphicon glyphicon-flash"> &nbsp&nbsp&nbsp</span></a>
+				<a class="navbar-brand" href="index.html">Codeforces Standings <span class="glyphicon glyphicon-plus"> &nbsp&nbsp&nbsp</span></a>
 				<a class="navbar-brand" href="#"><span id="loading"><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>&nbsp<span id="loading-message">Loading</span>...</span></a>
 
 			</div>
@@ -23,13 +23,23 @@
 			<div class="collapse navbar-collapse">
 
 				<form class="navbar-form navbar-right" role="search" >
+					
 					<div class="input-group" id="country-group">
+						
 						<input type="text" class="form-control typeahead" id="country-typeahead" placeholder="country goes here" style="width: 200px;">
 					</div>
 					<div class="input-group" id="contest-group">
 						
 						<input type="text" class="form-control typeahead" id="contest-typeahead" placeholder="contest name goes here" style="width: 440px;">
+						
+					</div>
+					<div class="input-group" id="contest-group">
+						<div class="input-group-btn" id="unofficial">
+						</div>
+					</div>
+					<div class="input-group" id="button-group">
 						<div class="input-group-btn">
+							<a href="friend.html" class="btn btn-primary" role="button" target="_blank">import friend &nbsp<span class="glyphicon glyphicon-import"></a>
 						</div>
 					</div>
 				</form>
