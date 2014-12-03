@@ -1,4 +1,4 @@
-span.twitter-typeahead .tt-dropdown-menu {
+span.twitter-typeahead .tt-dropdown-menu{
   position: absolute;
   top: 100%;
   left: 0;
@@ -6,6 +6,7 @@ span.twitter-typeahead .tt-dropdown-menu {
   display: none;
   float: left;
   min-width: 440px;
+  max-width: 440px;
   padding: 5px 0;
   margin: 1px 0 0;
   list-style: none;
@@ -21,6 +22,32 @@ span.twitter-typeahead .tt-dropdown-menu {
   max-height: 200px;
   overflow-y: auto;
 }
+
+#country-group span.twitter-typeahead .tt-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  display: none;
+  float: left;
+  min-width: 200px;
+  max-width: 200px;
+  padding: 5px 0;
+  margin: 1px 0 0;
+  list-style: none;
+  font-size: 14px;
+  text-align: left;
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  background-clip: padding-box;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
 span.twitter-typeahead .tt-suggestion > p {
   display: block;
   padding: 3px 20px;
@@ -58,3 +85,6 @@ span.twitter-typeahead {
   top: 28px !important;
 }
 
+#contest-typeahead {
+  min-width: 200px;
+}

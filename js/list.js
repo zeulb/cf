@@ -5,6 +5,17 @@ function getCleanURL(contestId)
 	else if (getUrlParameter("sortByHandle") === "true") url += "&sortByHandle=true";
 	else if (getUrlParameter("sortByCountry") === "true") url += "&sortByCountry=true";
 	else if (getUrlParameter("sortByHack") === "true") url += "&sortByHack=true";
+	if (getUrlParameter("country") !== undefined) url += "&country="+getUrlParameter("country");
+	return url;
+}
+
+function getCleanURL2(contestId)
+{
+	var url = "index.html?id="+contestId;
+	if (getUrlParameter("sortByRating") === "true") url += "&sortByRating=true";
+	else if (getUrlParameter("sortByHandle") === "true") url += "&sortByHandle=true";
+	else if (getUrlParameter("sortByCountry") === "true") url += "&sortByCountry=true";
+	else if (getUrlParameter("sortByHack") === "true") url += "&sortByHack=true";
 	return url;
 }
 
@@ -16,6 +27,7 @@ function display(contestId)
 		return;
 	}
 	console.log("displayed "+contestId);
+	console.log(getUrlParameter("country"));
 	var url = getCleanURL(contestId);
 	if (getUrlParameter("showUnofficial") === "true") url += "&showUnofficial=true";
 	window.history.pushState({},"",url);
@@ -81,22 +93,35 @@ $(document).ready(function(){
 	}
 	getContestList();
 
-	$('.typeahead').typeahead(null, {
-		name: 'states',
+	$('#contest-typeahead').typeahead(null, {
+		name: 'contest',
 		displayKey: 'value',
 		source: substringMatcher(contestList)
 	});
 
 	var selectedDatum;
-	$('.typeahead').on('typeahead:selected', function(event, datum) {
+	$('#contest-typeahead').on('typeahead:selected', function(event, datum) {
 		selectedDatum = datum;
 		console.log(selectedDatum["value"]);
 		display(contestMap[selectedDatum["value"]]);
 	});
 
-	$('#go').on('click.search', function(){
-		display(contestMap[selectedDatum["value"]]);
+	$('#country-typeahead').typeahead(null, {
+		name: 'country',
+		displayKey: 'value',
+		source: substringMatcher(countryList)
 	});
+
+	var selectedDatum;
+	$('#country-typeahead').on('typeahead:selected', function(event, datum) {
+		selectedDatum = datum;
+		console.log(selectedDatum["value"]);
+		var url = getCleanURL2(requestedId);
+		url += "&country="+selectedDatum["value"];
+		window.history.pushState({},"",url);
+		showOnly(selectedDatum["value"]);
+	});
+
 
 	$(".input-group-btn").on("click","#unofficial-no",function(){
 		console.log("triggeredd222");

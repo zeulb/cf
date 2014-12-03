@@ -1,5 +1,20 @@
 var requestedId;
 
+function showOnly(country)
+{
+	$.each(contestantList, function(index,value) {
+			if (country === "Global") $("#user"+index).show();
+			else if (value.userInfo.country !== country)
+			{
+				$("#user"+index).hide();
+			}
+			else
+			{
+				$("#user"+index).show();
+			}
+		});
+}
+
 function showTableBody()
 {
 	console.log("newContestId:"+newContestId);
@@ -25,7 +40,10 @@ function showTableBody()
 			tableRow += "<td class='"+colorUserMapping[value.userInfo.rank]+"'>* "+value.userInfo.handle+"</td>";
 
 		// Add rating
+		if (value.userInfo.rank !== "unrated")
 		tableRow += "<td class='"+colorUserMapping[value.userInfo.rank]+" text-center'>"+value.userInfo.rating+"</td>";
+		else
+		tableRow += "<td class='"+colorUserMapping[value.userInfo.rank]+" text-center'>"+"-"+"</td>";
 
 		
 
@@ -47,15 +65,15 @@ function showTableBody()
 		$.each(problem, function(index,value) {
 			if (value.points > 0)
 			{
-				var minutes = Math.round(value.bestSubmissionTimeSeconds/60);
-				var hours = Math.round(minutes/60);
+				var minutes = Math.floor(value.bestSubmissionTimeSeconds/60);
+				var hours = Math.floor(minutes/60);
 				minutes %= 60;
 				minutes = padding(minutes,2);
 				hours = padding(hours,2);
 
 				//console.log(index+" "+fastestSolve[index]);
 				if (value.bestSubmissionTimeSeconds===fastestSolve[index])
-					tableRow += "<td class='text-center' style = 'color:#0a0;font-weight: bold;background-color:#CCFFFF'>"+value.points+"<br><small class='text-muted' style='font-weight: normal;'>"+hours+":"+minutes+"</small></td>";
+					tableRow += "<td class='text-center' style = 'color:#0a0;font-weight: bold;backgfloor-color:#CCFFFF'>"+value.points+"<br><small class='text-muted' style='font-weight: normal;'>"+hours+":"+minutes+"</small></td>";
 			
 				else
 					tableRow += "<td class='text-center' style = 'color:#0a0;font-weight: bold;'>"+value.points+"<br><small class='text-muted' style='font-weight: normal;'>"+hours+":"+minutes+"</small></td>";
@@ -71,15 +89,21 @@ function showTableBody()
 		});
 
 		// update behaviour
-		if (newContestId)
+		if (newContestId || $("#user"+index).length === 0)
 			$("tbody").append("<tr id='user"+index+"'>"+tableRow+"</tr>");
 		else
 			$("#user"+index).html(tableRow);
 	});
-
+	var country = getUrlParameter("country");
+	if (country !== undefined)
+	{
+		$("#loading").fadeIn();
+		showOnly(country);
+		$("#loading").fadeOut(1000);
+	}
 	// Refresh every 60 seconds
 	newContestId = false;
-	if (autoRefresh) statusRefresh = setTimeout("getStandings()",60000);
+	if (autoRefresh) statusRefresh = setTimeout("getStandings()",20000);
 	$("input").prop('disabled', false);
 	$('.btn').attr("disabled", false);
 	$("#loading").fadeOut(1000);
@@ -102,7 +126,7 @@ function getExpectedRank()
 			contestantList[value.index].expectedRank = index+1;
 			lastRank = index+1;
 		}
-		lastRating = value.rating;
+		lastRating = value.userInfo.rating;
 	});
 }
 
@@ -143,14 +167,15 @@ function doSort()
 
 function finalize()
 {
-	$("#loading-message").html("Working");
+	$("#loading-message").html("Loading");
 	doSort();
 	showTableBody();
 }
 
-function getUser(size,handle)
+function getUser(unretrievedUser,unretrievedIndex,totalRequested)
 {
-	$("#loading-message").html("Retrieving user information ("+Math.round(((contestantList.length-size)/contestantList.length)*100)+"%)");
+	$("#loading-message").html("Retrieving user information ("+Math.floor(((totalRequested-unretrievedUser.length)/totalRequested)*100)+"%)");
+	requestedUser.reverse();
 	$.ajax({
 		url: 'http://codeforces.com/api/user.info',
 		dataType: 'JSONP',
@@ -163,24 +188,25 @@ function getUser(size,handle)
 		success: function (data) {
 			member = data.result;
 			$.each(member, function(index,value) {
-				contestantList[size-1].userInfo = value;
-				size--;
+				caches[value.handle] = value;
+				contestantList[requestedIndex.pop()].userInfo = value;
+				requestedUser.pop();
+				
 			});
-			if (size === 0)
+			if (unretrievedUser.length === 0)
 			{
-				$("#loading-message").html("Retrieving user information ("+Math.round(((contestantList.length-size)/contestantList.length)*100)+"%)");
 				getAdditionalData();
 				finalize();
 			}
 			else
 			{
-				requestedUser = [];
 				while(requestedUser.length < maxUserEachRetrieval)
 				{
-					requestedUser.push(handle.pop());
-					if (handle.length === 0) break;
+					requestedUser.push(unretrievedUser.pop());
+					requestedIndex.push(unretrievedIndex.pop());
+					if (unretrievedUser.length === 0) break;
 				}
-				getUser(size,handle);
+				getUser(unretrievedUser,unretrievedIndex,totalRequested);
 			}
 		},
 		error: function ()
@@ -191,18 +217,21 @@ function getUser(size,handle)
 	});
 }
 
-function processUser(unretrievedUser)
+function processUser(unretrievedUser,unretrievedIndex,totalRequested)
 {
 	while(requestedUser.length < maxUserEachRetrieval) {
 		requestedUser.push(unretrievedUser.pop());
+		requestedIndex.push(unretrievedIndex.pop());
 		if (unretrievedUser.length === 0) break;
 	}
-	getUser(unretrievedUser.length+requestedUser.length,unretrievedUser);
+	getUser(unretrievedUser,unretrievedIndex,totalRequested);
 }
 
 function extractRow(user)
 {
 	var unretrievedUser = [];
+	var unretrievedIndex = [];
+	var realIndex = 0;
 	$.each(user, function(index,value) {
 		if (!ignoredparticipantType.contains(value.party.participantType))
 		{
@@ -210,12 +239,26 @@ function extractRow(user)
 			contestantList.push({});
 			cloneTemp.push({});
 			// Cannot handle team member for now
-			unretrievedUser.push(member[0].handle);
+			if (caches.hasOwnProperty(member[0].handle))
+			{
+				console.log("HIT");
+				alert("ada");
+				contestantList[realIndex].userInfo = caches[member[0].handle];
+			}
+			else
+			{
+				unretrievedUser.push(member[0].handle);
+				unretrievedIndex.push(realIndex);
+			}
+			realIndex++;
 		}
 	});
-	processUser(unretrievedUser);
+	if (unretrievedUser.length !== 0)
+	{
+		processUser(unretrievedUser,unretrievedIndex,unretrievedIndex.length);
+	}
 	// Extract data to contestantList
-	var realIndex = 0;
+	realIndex = 0;
 	$.each(user, function(index,value) {
 		if (!ignoredparticipantType.contains(value.party.participantType))
 		{
@@ -238,6 +281,12 @@ function extractRow(user)
 			realIndex++;
 		}
 	});
+	if (unretrievedUser.length === 0)
+	{
+		//console.log("Masuk");
+		getAdditionalData();
+		finalize();
+	}
 
 }
 
@@ -245,14 +294,13 @@ function showTableHead(result) {
 	$("title").empty();
 	$(".panel-heading").empty();
 	$("thead > tr").empty();
-	$("thead").empty();
 	$("tbody").empty();
 
 	$("title").append(result.contest.name);
 
 	$(".panel-heading").append("<h4 class='text-center'>"+result.contest.name+"</h4>");
 	
-	$("thead").append('<tr><td class="text-center vertical-align" id="table-rank">Rank</td><td class="text-center vertical-align" id="table-exp-rank">Exp. Rank</td><td id="table-country" class="vertical-align">Country</td><td id="table-handle" class="vertical-align">Handle</td><td class="text-center vertical-align" id="table-rating">Rating</td><td class="text-center vertical-align" id="table-point">Points</td><td class="text-center vertical-align" id="table-hack">Hack</td></tr>');
+	$("thead > tr").append('<td class="text-center vertical-align" id="table-rank">Rank</td><td class="text-center vertical-align" id="table-exp-rank">Seed</td><td id="table-country" class="vertical-align">Country</td><td id="table-handle" class="vertical-align">Handle</td><td class="text-center vertical-align" id="table-rating">Rating</td><td class="text-center vertical-align" id="table-point">Points</td><td class="text-center vertical-align" id="table-hack">Hack</td>');
 	
 	fastestSolve = [];
 	var problemData = result.problems;
@@ -320,31 +368,32 @@ updateURL = function(parameter) {
 	if (parameter === "sortByHack") {
 		if (getUrlParameter("sortByHack") !=="true") url += "&sortByHack=true";
 	}
+	if (getUrlParameter("country") !== undefined) url += "&country="+getUrlParameter("country");
 	if (getUrlParameter("showUnofficial") === "true") url += "&showUnofficial=true";
 	window.history.pushState({},"",url);
 	finalize();
 }
 
 $(document).ready(function() {
-	$("thead").on("click","#table-rank",function(){
+	$("thead > tr").on("click","#table-rank",function(){
 		updateURL("sortByRank");
 	});
-	$("thead").on("click","#table-country",function() {
+	$("thead > tr").on("click","#table-country",function() {
 		updateURL("sortByCountry");
 	});
-	$("thead").on("click","#table-handle",function() {
+	$("thead > tr").on("click","#table-handle",function() {
 		updateURL("sortByHandle");
 	});
-	$("thead").on("click","#table-rating",function() {
+	$("thead > tr").on("click","#table-rating",function() {
 		updateURL("sortByRating");
 	});
-	$("thead").on("click","#table-point",function() {
+	$("thead > tr").on("click","#table-point",function() {
 		updateURL("sortByRank");
 	});
-	$("thead").on("click","#table-hack",function() {
+	$("thead > tr").on("click","#table-hack",function() {
 		updateURL("sortByHack");
 	});
-	$("thead").on("click","#table-exp-rank",function() {
+	$("thead > tr").on("click","#table-exp-rank",function() {
 		updateURL("sortByRating");
 	});
 });

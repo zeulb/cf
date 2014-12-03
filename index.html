@@ -15,7 +15,7 @@
 	<nav class="navbar navbar-inverse" role="navigation">
 		<div class="container-fluid">
 			<div class="navbar-header">
-				<a class="navbar-brand" href="#">Codeforces Standings <span class="glyphicon glyphicon-flash"> &nbsp&nbsp&nbsp</span></a>
+				<a class="navbar-brand" href="index.html">Codeforces Standings <span class="glyphicon glyphicon-flash"> &nbsp&nbsp&nbsp</span></a>
 				<a class="navbar-brand" href="#"><span id="loading"><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>&nbsp<span id="loading-message">Loading</span>...</span></a>
 
 			</div>
@@ -23,9 +23,12 @@
 			<div class="collapse navbar-collapse">
 
 				<form class="navbar-form navbar-right" role="search" >
-					<div class="input-group">
+					<div class="input-group" id="country-group">
+						<input type="text" class="form-control typeahead" id="country-typeahead" placeholder="country goes here" style="width: 200px;">
+					</div>
+					<div class="input-group" id="contest-group">
 						
-						<input type="text" class="form-control typeahead" placeholder="contest name here" style="width: 440px;">
+						<input type="text" class="form-control typeahead" id="contest-typeahead" placeholder="contest name goes here" style="width: 440px;">
 						<div class="input-group-btn">
 						</div>
 					</div>
@@ -39,7 +42,7 @@
 		<div class="col-md-12">
 			<div class="panel panel-primary">
 				<div class="panel-heading"></div>
-				<table class="table table-striped table-hover table-bordered">
+				<table class="table table-hover table-bordered">
 					<thead>
 						<tr>
 						</tr>
