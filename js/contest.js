@@ -362,7 +362,7 @@ function getStandings(){
 			if (newContestId===true) eraseEverything();
 			showTableHead(data.result);
 
-			autoRefresh=(data.result.contest.phase === "CODING");
+			autoRefresh=(data.result.contest.phase === "CODING" || data.result.contest.phase === "SYSTEM_TEST");
 			if (autoRefresh === 0 && statusRefresh !== undefined) clearInterval(statusRefresh);
 		//	console.log("sukses");
 			extractRow(data.result.rows);
