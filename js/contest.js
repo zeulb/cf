@@ -2,17 +2,31 @@ var requestedId;
 
 function showOnly(country)
 {
+	
+	var lastPoints = -9999999;
+	var lastRank = -1;
+	var realIndex = 0;
 	$.each(contestantList, function(index,value) {
 			if (country === "Global") $("#user"+index).show();
 			else if (value.userInfo.country === country || friend.contains(value.userInfo.handle))
 			{
+				if (value.points === lastPoints)
+					$("#user"+index+" .table-num").html(lastRank);
+				else {
+					$("#user"+index+" .table-num").html(realIndex+1);
+					lastRank = realIndex+1;
+				}
+				lastPoints = value.points;
 				$("#user"+index).show();
+				realIndex++;
 			}
 			else
 			{
 				$("#user"+index).hide();
 			}
 		});
+	if (country === "Global") $(".table-num").hide();
+	else $(".table-num").show();
 }
 
 function showTableBody()
@@ -21,11 +35,15 @@ function showTableBody()
 
 	$.each(contestantList, function(index,value) {
 		var tableRow = "";
+		tableRow += "<td class='text-center table-num'>"+value.rank+"</td>";
 		// Add rank
 		tableRow += "<td class='text-center'>"+value.rank+"</td>";
 
 		// Add expected rank
+		if (value.userInfo.rank !== "unrated")
 		tableRow += "<td class='text-center'>"+value.expectedRank+"</td>";
+		else
+		tableRow += "<td class='text-center'>"+Math.round((contestantList+1)/2)+"</td>";
 
 		// Add country
 		if (value.userInfo.country === "~")
@@ -37,7 +55,7 @@ function showTableBody()
 		if (isOfficial.contains(value.participantType))
 			tableRow += "<td class='"+colorUserMapping[value.userInfo.rank]+"'><a href='http://codeforces.com/profile/"+value.userInfo.handle+"' class='"+colorUserMapping[value.userInfo.rank]+"'>"+value.userInfo.handle+"</a></td>";
 		else
-			tableRow += "<td class='"+colorUserMapping[value.userInfo.rank]+"'>* "+value.userInfo.handle+"</td>";
+			tableRow += "<td class='"+colorUserMapping[value.userInfo.rank]+"'><a href='http://codeforces.com/profile/"+value.userInfo.handle+"' class='"+colorUserMapping[value.userInfo.rank]+"'>* "+value.userInfo.handle+"</a></td>";
 
 		// Add rating
 		if (value.userInfo.rank !== "unrated")
@@ -107,6 +125,7 @@ function showTableBody()
 		showOnly(country);
 		$("#loading").fadeOut(1000);
 	}
+	else $(".table-num").hide();
 	// Refresh every 60 seconds
 	newContestId = false;
 	if (autoRefresh)
@@ -147,7 +166,7 @@ function getAdditionalData()
 		//console.log(index+" "+value);
 		//console.log(value.userInfo.country);
 		if (value.userInfo.country === undefined) value.userInfo.country = "~";
-		if (value.userInfo.rating  === undefined) value.userInfo.rating  = 1500;
+		if (value.userInfo.rating  === undefined) value.userInfo.rating  = -12345;
 		if (value.userInfo.rank  === undefined) value.userInfo.rank  = "unrated";
 		value.hackBalance = value.successfulHackCount-value.unsuccessfulHackCount;
 	});
@@ -235,13 +254,22 @@ function processUser(user,unretrievedUser,unretrievedIndex,totalRequested)
 {
 	var realIndex;
 	realIndex = 0;
+
+	var lastPoints = -9999999;
+	var lastRank = -1;
 	$.each(user, function(index,value) {
 		if (!ignoredparticipantType.contains(value.party.participantType))
 		{
 			var participant = contestantList[realIndex];
 			participant.index = realIndex;
 			participant.participantType = value.party.participantType;
-			participant.rank = realIndex+1;
+			if (value.points === lastPoints)
+				participant.rank = lastRank;
+			else {
+				participant.rank = realIndex+1;
+				lastRank = realIndex+1;
+			}
+			lastPoints = value.points;
 			participant.points = value.points;
 			participant.penalty = value.penalty;
 			participant.successfulHackCount = value.successfulHackCount;
@@ -322,7 +350,7 @@ function showTableHead(result) {
 
 	$(".panel-heading").append("<h4 class='text-center'>"+result.contest.name+"</h4>");
 	
-	$("thead > tr").append('<td class="text-center vertical-align" id="table-rank" style="cursor:pointer">Rank</td><td class="text-center vertical-align" id="table-exp-rank" style="cursor:pointer">Seed</td><td class="text-center" id="table-country" class="vertical-align" style="cursor:pointer">Country</td><td id="table-handle" class="text-center vertical-align" style="cursor:pointer">Handle</td><td class="text-center vertical-align" id="table-rating" style="cursor:pointer">Rating</td><td class="text-center vertical-align" id="table-point" style="cursor:pointer">Points</td><td class="text-center vertical-align" id="table-hack" style="cursor:pointer">Hack</td>');
+	$("thead > tr").append('<td class="text-center vertical-align table-num">#</td><td class="text-center vertical-align" id="table-rank" style="cursor:pointer">Rank</td><td class="text-center vertical-align" id="table-exp-rank" style="cursor:pointer">Exp. Rank</td><td class="text-center" id="table-country" class="vertical-align" style="cursor:pointer">Country</td><td id="table-handle" class="text-center vertical-align" style="cursor:pointer">Handle</td><td class="text-center vertical-align" id="table-rating" style="cursor:pointer">Rating</td><td class="text-center vertical-align" id="table-point" style="cursor:pointer">Points</td><td class="text-center vertical-align" id="table-hack" style="cursor:pointer">Hack</td>');
 	
 	fastestSolve = [];
 	var problemData = result.problems;
